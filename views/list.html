@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Patient List</title>
+  </head>
+  <body>
+    <dialog id="addOrder">
+      <form method="dialog">
+        <p>
+          <label
+            >Add message:
+            <input name="message" />
+          </label>
+        </p>
+        <div>
+          <button value="cancel">取消</button>
+          <button id="confirm" value="default">新增</button>
+          <button id="update" value="default">編輯</button>
+        </div>
+      </form>
+    </dialog>
+    <div>
+      <font color="blue">小民</font>
+      <button id="updateMessages1">更新訊息</button>
+    </div>
+    <div>
+      <font color="blue">小美</font>
+      <button id="updateMessages2">更新訊息</button>
+    </div>
+    <div>
+      <font color="blue">小晴</font>
+      <button id="updateMessages3">更新訊息</button>
+    </div>
+    <div>
+      <font color="blue">小白</font>
+      <button id="updateMessages4">更新訊息</button>
+    </div>
+    <div>
+      <font color="blue">小陳</font>
+      <button id="updateMessages5">更新訊息</button>
+    </div>
+
+    <div class="list" id="patient">
+      <button type="click">show details</button>
+      <table border="1">
+        <thead>
+          <tr>
+            <th colspan="2">Patient details</th>
+          </tr>
+          <td>Id</td>
+          <td>Name</td>
+          <td>Message</td>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <script>
+      const table = document.createElement("table");
+      const list = document.querySelector(".list");
+      const patient = document.getElementById("patient");
+      const b = document.createElement("br");
+      list.addEventListener("click", (event) => {
+        event.preventDefault();
+        $.ajax({
+          url: "/list",
+          type: "GET",
+        })
+          .then((res) => {
+            show(res);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      });
+
+      const tbody = document.querySelector("tbody");
+
+      const updateButton1 = document.getElementById("updateMessages1");
+      const updateButton2 = document.getElementById("updateMessages2");
+      const updateButton3 = document.getElementById("updateMessages3");
+      const updateButton4 = document.getElementById("updateMessages4");
+      const updateButton5 = document.getElementById("updateMessages5");
+      const addOrder = document.getElementById("addOrder");
+      const inputEle = addOrder.querySelector("input");
+      const confirmBtn = addOrder.querySelector("#confirm");
+      const updateBtn = addOrder.querySelector("#update");
+      let currentID = null;
+      updateButton1.addEventListener("click", () => {
+        addOrder.showModal();
+        currentID = 1;
+      });
+      updateButton2.addEventListener("click", () => {
+        addOrder.showModal();
+        currentID = 2;
+      });
+      updateButton3.addEventListener("click", () => {
+        addOrder.showModal();
+        currentID = 3;
+      });
+      updateButton4.addEventListener("click", () => {
+        addOrder.showModal();
+        currentID = 4;
+      });
+      updateButton5.addEventListener("click", () => {
+        addOrder.showModal();
+        currentID = 5;
+      });
+      confirmBtn.addEventListener("click", () => {
+        const newOrder = {
+          id: currentID,
+          message: inputEle.value,
+        };
+        $.ajax({
+          url: "/list",
+          type: "POST",
+          dataType: "html",
+          data: newOrder,
+        })
+          .then((res) => {
+            $.ajax({
+              url: "/list",
+              type: "GET",
+            })
+              .then((res) => {
+                show(res);
+              })
+              .catch((err) => {
+                console.log(err);
+              });
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      });
+
+      let orderID;
+      updateBtn.addEventListener("click", () => {
+        const search = {
+          id: currentID,
+        };
+        $.ajax({
+          url: "/list/single",
+          type: "POST",
+          dataType: "html",
+          data: search,
+        })
+          .then((res) => {
+            res = JSON.parse(res);
+            orderID = res[0].orderID;
+            const newOrder = {
+              id: orderID,
+              message: inputEle.value,
+            };
+            $.ajax({
+              url: "/list",
+              type: "PATCH",
+              dataType: "html",
+              data: newOrder,
+            }).then((res) => {
+              $.ajax({
+                url: "/list",
+                type: "GET",
+              }).then((res) => {
+                show(res);
+              });
+            });
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      });
+
+      function show(res) {
+        while (tbody.firstChild) {
+          tbody.removeChild(tbody.lastChild);
+        }
+        for (let i = 0; i < res.length; i++) {
+          let tr = document.createElement("tr");
+          tbody.appendChild(tr);
+
+          let td1 = document.createElement("td");
+          td1.innerHTML = res[i].id;
+          tbody.appendChild(td1);
+          let td2 = document.createElement("td");
+          td2.innerHTML = res[i].name;
+          tbody.appendChild(td2);
+          let td3 = document.createElement("td");
+          td3.innerHTML = res[i].message;
+          tbody.appendChild(td3);
+
+          document.body.insertBefore(table, patient);
+        }
+      }
+    </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+  </body>
+</html>
